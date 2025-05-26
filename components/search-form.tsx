@@ -31,8 +31,8 @@ interface SearchFormProps {
 
 export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
   const [address, setAddress] = useState("")
-  const [radius, setRadius] = useState("10")
-  const [specialty, setSpecialty] = useState("")
+  const [radius, setRadius] = useState("5")
+  const [specialty, setSpecialty] = useState("gynecologist")
   const [customSpecialty, setCustomSpecialty] = useState("")
   const [isCustom, setIsCustom] = useState(false)
 

@@ -1,98 +1,104 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import SearchForm from "@/components/search-form"
-import ResultsList from "@/components/results-list"
-import ResultsMap from "@/components/results-map"
-import SavedResults from "@/components/saved-results"
-import ExcludedResults from "@/components/excluded-results"
-import FilterSettings from "@/components/filter-settings"
-import type { MedicalProfessional, SearchParams, FilterConfig } from "@/lib/types"
-import { searchMedicalProfessionals } from "./actions"
-import { filterResults } from "@/lib/filter-utils"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle, Filter, Search, MapIcon } from "lucide-react"
-import { useSupabase } from "@/lib/supabase-provider"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import SearchForm from "@/components/search-form";
+import ResultsList from "@/components/results-list";
+import ResultsMap from "@/components/results-map";
+import SavedResults from "@/components/saved-results";
+import ExcludedResults from "@/components/excluded-results";
+import FilterSettings from "@/components/filter-settings";
+import type {
+  MedicalProfessional,
+  SearchParams,
+  FilterConfig,
+} from "@/lib/types";
+import { searchMedicalProfessionals } from "./actions";
+import { filterResults } from "@/lib/filter-utils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, Filter, Search, MapIcon } from "lucide-react";
+import { useSupabase } from "@/lib/supabase-provider";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function Home() {
-  const { error: supabaseError } = useSupabase()
-  const [results, setResults] = useState<MedicalProfessional[]>([])
+  const { error: supabaseError } = useSupabase();
+  const [results, setResults] = useState<MedicalProfessional[]>([]);
   const [filteredResults, setFilteredResults] = useState<{
-    included: MedicalProfessional[]
-    excluded: MedicalProfessional[]
-  }>({ included: [], excluded: [] })
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | undefined>(undefined)
+    included: MedicalProfessional[];
+    excluded: MedicalProfessional[];
+  }>({ included: [], excluded: [] });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [mapCenter, setMapCenter] = useState<
+    { lat: number; lng: number } | undefined
+  >(undefined);
   const [filterConfig, setFilterConfig] = useState<FilterConfig>({
     excludeEmptyFields: true,
     excludedKeywords: ["cloudnine", "apollo"],
-  })
-  const [isOptionsExpanded, setIsOptionsExpanded] = useState(false)
-  const [quickSearchTerm, setQuickSearchTerm] = useState("")
-  const [showMap, setShowMap] = useState(true)
+  });
+  const [isOptionsExpanded, setIsOptionsExpanded] = useState(false);
+  const [quickSearchTerm, setQuickSearchTerm] = useState("");
+  const [showMap, setShowMap] = useState(true);
 
   const handleSearch = async (params: SearchParams) => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
-      const professionals = await searchMedicalProfessionals(params)
-      setResults(professionals)
+      const professionals = await searchMedicalProfessionals(params);
+      setResults(professionals);
 
       // Apply filters
-      const filtered = filterResults(professionals, filterConfig)
-      setFilteredResults(filtered)
+      const filtered = filterResults(professionals, filterConfig);
+      setFilteredResults(filtered);
 
       // If we have results, set the map center to the first result
       if (filtered.included.length > 0) {
         setMapCenter({
           lat: filtered.included[0].latitude,
           lng: filtered.included[0].longitude,
-        })
+        });
       } else if (professionals.length > 0) {
         setMapCenter({
           lat: professionals[0].latitude,
           lng: professionals[0].longitude,
-        })
+        });
       }
 
       // Collapse options panel after successful search
-      setIsOptionsExpanded(false)
+      setIsOptionsExpanded(false);
     } catch (err) {
-      console.error("Error searching:", err)
-      setError("An error occurred while searching. Please try again.")
-      setResults([])
-      setFilteredResults({ included: [], excluded: [] })
+      console.error("Error searching:", err);
+      setError("An error occurred while searching. Please try again.");
+      setResults([]);
+      setFilteredResults({ included: [], excluded: [] });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const updateFilterConfig = (newConfig: FilterConfig) => {
-    setFilterConfig(newConfig)
+    setFilterConfig(newConfig);
     // Re-apply filters when config changes
     if (results.length > 0) {
-      setFilteredResults(filterResults(results, newConfig))
+      setFilteredResults(filterResults(results, newConfig));
     }
-  }
+  };
 
   const handleQuickSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const term = e.target.value.toLowerCase()
-    setQuickSearchTerm(term)
+    const term = e.target.value.toLowerCase();
+    setQuickSearchTerm(term);
 
     if (results.length > 0) {
       if (!term) {
         // If search term is empty, just apply the regular filters
-        setFilteredResults(filterResults(results, filterConfig))
+        setFilteredResults(filterResults(results, filterConfig));
       } else {
         // Filter results based on the search term and regular filters
-        const regularFiltered = filterResults(results, filterConfig)
+        const regularFiltered = filterResults(results, filterConfig);
 
         const quickFiltered = {
           included: regularFiltered.included.filter(
@@ -100,19 +106,21 @@ export default function Home() {
               p.name.toLowerCase().includes(term) ||
               p.specialty.toLowerCase().includes(term) ||
               p.workplace.toLowerCase().includes(term) ||
-              p.address.toLowerCase().includes(term),
+              p.address.toLowerCase().includes(term)
           ),
           excluded: regularFiltered.excluded,
-        }
+        };
 
-        setFilteredResults(quickFiltered)
+        setFilteredResults(quickFiltered);
       }
     }
-  }
+  };
 
   return (
     <main className="container mx-auto py-8 px-4 max-w-[1400px]">
-      <h1 className="text-3xl font-bold mb-6 text-center">Medical Professional Finder</h1>
+      <h1 className="text-3xl font-bold mb-6 text-center">
+        Medical Professional Finder
+      </h1>
 
       {supabaseError && (
         <Alert variant="destructive" className="mb-6">
@@ -140,7 +148,12 @@ export default function Home() {
               <Filter className="h-4 w-4 mr-2" />
               Filter Options
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setShowMap(!showMap)} className="whitespace-nowrap">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowMap(!showMap)}
+              className="whitespace-nowrap"
+            >
               <MapIcon className="h-4 w-4 mr-2" />
               {showMap ? "Hide Map" : "Show Map"}
             </Button>
@@ -149,13 +162,7 @@ export default function Home() {
           {/* Combined Search and Filter Panel */}
           {isOptionsExpanded && (
             <div className="bg-card rounded-lg border shadow-sm p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Search Options */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Search Options</h3>
-                  <SearchForm onSearch={handleSearch} isLoading={isLoading} />
-                </div>
-
+              <div className="grid grid-cols-1 gap-6">
                 {/* Filter Settings */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Filter Settings</h3>
@@ -171,16 +178,23 @@ export default function Home() {
                       onChange={handleQuickSearch}
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Filter displayed results by name, specialty, workplace, or address
+                      Filter displayed results by name, specialty, workplace, or
+                      address
                     </p>
                   </div>
 
-                  <FilterSettings config={filterConfig} onConfigChange={updateFilterConfig} />
+                  <FilterSettings
+                    config={filterConfig}
+                    onConfigChange={updateFilterConfig}
+                  />
                 </div>
               </div>
             </div>
           )}
-
+          <div className="py-2">
+            <h1 className="text-xl md:text-3xl font-semibold my-3">Search Doctors</h1>
+            <SearchForm onSearch={handleSearch} isLoading={isLoading} />
+          </div>
           {/* Main Content Area - Full Width */}
           <div className="w-full">
             {error && (
@@ -200,7 +214,8 @@ export default function Home() {
             {!isLoading && results.length === 0 && !error && (
               <div className="text-center p-8 border rounded-lg">
                 <p className="text-muted-foreground">
-                  Use the Filter Options button to search for medical professionals.
+                  Use the Filter Options button to search for medical
+                  professionals.
                 </p>
               </div>
             )}
@@ -208,7 +223,12 @@ export default function Home() {
             {!isLoading && filteredResults.included.length > 0 && (
               <>
                 <ResultsList results={filteredResults.included} />
-                {showMap && <ResultsMap results={filteredResults.included} center={mapCenter} />}
+                {showMap && (
+                  <ResultsMap
+                    results={filteredResults.included}
+                    center={mapCenter}
+                  />
+                )}
               </>
             )}
 
@@ -223,5 +243,5 @@ export default function Home() {
         </TabsContent>
       </Tabs>
     </main>
-  )
+  );
 }

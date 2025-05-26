@@ -59,11 +59,18 @@ export default function ResultsList({ results }: ResultsListProps) {
     )
   }
 
-  const handleCopy = async (text: string, fieldId: string) => {
+  const handleCopy = async (text: string, fieldId: string, message: string | null = null) => {
     try {
       await navigator.clipboard.writeText(text)
       setCopiedField(fieldId)
       setTimeout(() => setCopiedField(null), 2000) // Reset after 2 seconds
+      if (message) {
+        toast({
+          title: "Copied to clipboard",
+          description: message,
+        })
+        return;
+      }
       toast({
         title: "Copied to clipboard",
         description: "Text has been copied to your clipboard.",
@@ -375,7 +382,7 @@ export default function ResultsList({ results }: ResultsListProps) {
                           variant="ghost"
                           size="icon"
                           className="h-6 w-6 rounded-full flex-shrink-0"
-                          onClick={() => handleCopy(professional.address, addressCopyId)}
+                          onClick={() => handleCopy(professional.address, addressCopyId, "The google map link copied")}
                           aria-label="Copy address"
                         >
                           {copiedField === addressCopyId ? (
